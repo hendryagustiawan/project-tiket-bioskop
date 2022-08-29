@@ -4,7 +4,7 @@ const {encodeData} = require('../helpers/jwt')
 
 class ControllerUser{
     // read All User
-    static async readAll(req, res){
+    static async readAll(req, res, next){
         try {
             const user = await User.findAll()
             if(user.length === 0){
@@ -13,16 +13,12 @@ class ControllerUser{
                 res.status(200).json(user)
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 
     // read by id
-    static async readUserById(req, res){
+    static async readUserById(req, res, next){
         const {id} = req.params
 
         try {
@@ -34,41 +30,39 @@ class ControllerUser{
                 res.status(200).json(data)
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 
     // Add User or Registrasi
-    static async addUser(req, res){
-        const {username, password, email, role, phoneNumber} = req.body
-        
-        try {
-            const newData = await User.create({username, password, email, role, phoneNumber})
+    static async addUser(req, res, next){
+        const {username, password, email, phoneNumber} = req.body
 
-            res.status(200).json(newData)
-        } catch (error) {
-            if(error.name === 'SequelizeValidationError'){
-                const errMessage = error.errors.map(el => {
-                    return el.message
-                })
-                res.status(400).json({message : errMessage})
-            }else{
-                res.status(500).json(error)
+        const  checkEmail = await User.findOne({where : {email}})
+
+        if(checkEmail){
+            next({name : "Email already"})
+        }else{
+            try {
+                const newData = await User.create({username, password, email, role : 'admin', phoneNumber})
+    
+                res.status(200).json({id : newData.id, username : newData.username, email : newData.email, role : newData.role, phoneNumber : newData.phoneNumber})
+            } catch (error) {
+                next(error)
             }
         }
+        
     }
 
     // user login
-    static async login(req, res){
+    static async login(req, res, next){
         const {email, password} = req.body
         
         // cek inputan ada/tidak
-        if(!email || !password){ // jika inputan kosong
-            res.status(400).json({message : 'Email and Password is required'})
+        if(!email){ // jika inputan kosong
+            next({name : 'emailRequired'})
+        }else if(!password){
+            next({name : 'passwordRequired'})
         }else{
             try {
                 const user = await User.findOne({where : {email}})
@@ -85,17 +79,13 @@ class ControllerUser{
                     throw {name : 'invalidUser'}
                 }
             } catch (error) {
-                if(error.name === 'invalidUser'){
-                    res.status(400).json({message : 'Bad Request'})
-                }else{
-                    res.status(500).json(error)
-                }
+                next(error)
             }
         }
     }
 
     // edit user
-    static async editUser(req, res){
+    static async editUser(req, res, next){
         const {id} = req.params
         const {username, password, email, role, phoneNumber} = req.body
         
@@ -106,22 +96,12 @@ class ControllerUser{
             }
             res.status(200).json(dataEdit)
         } catch (error) {
-            if(error.name === 'SequelizeValidationError'){
-                let errMessage = error.errors.map(el=>{
-                    return el.message
-                })
-                res.status(400).json(errMessage)
-            } else if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }
-            else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 
     // delete user
-    static async deleteUser(req, res){
+    static async deleteUser(req, res, next){
         const {id} = req.params
 
         try {
@@ -133,11 +113,7 @@ class ControllerUser{
                 res.status(200).json({message : 'Success to delete data user'})
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 

@@ -2,7 +2,7 @@ const {Movie} = require('../models')
 
 class ControllerMovie{
     // read movie
-    static async readMovie(req, res){
+    static async readMovie(req, res, next){
         try {
             const data = await Movie.findAll()
 
@@ -12,16 +12,12 @@ class ControllerMovie{
                 res.status(200).json(data)
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }    
+            next(error)    
         }
     }
 
     // read by id
-    static async readMovieById(req, res){
+    static async readMovieById(req, res, next){
         const {id} = req.params
 
         try {
@@ -33,36 +29,26 @@ class ControllerMovie{
                 res.status(200).json(data)
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 
     // add movie
-    static async addMovie(req, res){
-        const {title, imgUrl, genre, producer, director, writer, synopsis, cast, price, duration, UserId, ProductionId} = req.body
+    static async addMovie(req, res, next){
+        const {title, imgUrl, genre, producer, director, writer, synopsis, cast, price, duration, ProductionId} = req.body
+        const UserId = req.userData.id
 
         try {
             const newData = await Movie.create({title, imgUrl, genre, producer, director, writer, synopsis, cast, price, duration, UserId, ProductionId})
 
             res.status(200).json(newData)
         } catch (error) {
-            if(error.name === 'SequelizeValidationError'){
-                const errMessage = error.errors.map(el => {
-                    return el.message
-                })
-                res.status(400).json({message : errMessage})
-            }else{
-                res.status(500).json(error)
-            }    
+            next(error)
         }
     }
 
     // edit movie
-    static async editMovie(req, res){
+    static async editMovie(req, res, next){
         const {id} = req.params
         
         const {title, imgUrl, genre, producer, director, writer, synopsis, cast, price, duration, UserId, ProductionId} = req.body
@@ -74,25 +60,14 @@ class ControllerMovie{
             }
             res.status(200).json(dataEdit)
         } catch (error) {
-            if(error.name === 'SequelizeValidationError'){
-                let errMessage = error.errors.map(el=>{
-                    return el.message
-                })
-                res.status(400).json(errMessage)
-            } else if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }
-            else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 
     // delete movie
-    static async deleteMovie(req, res){
+    static async deleteMovie(req, res, next){
         const {id} = req.params
-        console.log(id);
-
+        
         try {
             const data = await Movie.destroy({where : {id}})
 
@@ -102,11 +77,7 @@ class ControllerMovie{
                 res.status(200).json({message : 'Success to delete data movie'})
             }
         } catch (error) {
-            if(error.name === 'notFound'){
-                res.status(404).json({message : 'Data Not Found'})
-            }else{
-                res.status(500).json(error)
-            }
+            next(error)
         }
     }
 }
