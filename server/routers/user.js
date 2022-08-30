@@ -7,9 +7,10 @@ router.post('/add', ControllerUser.addUser)
 router.post('/login', ControllerUser.login)
 router.use(authentication)
 router.get('/', ControllerUser.readAll)
+router.get('/one-user', ControllerUser.getOneUser)
 router.get('/:id', ControllerUser.readUserById)
-router.put('/edit/:id', ControllerUser.editUser)
-router.delete('/delete/:id', ControllerUser.deleteUser)
+router.put('/:id', ControllerUser.editUser)
+router.delete('/:id', ControllerUser.deleteUser)
 
 
 

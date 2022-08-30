@@ -17,6 +17,23 @@ class ControllerUser{
         }
     }
 
+    // get one user by UserId
+    static async getOneUser(req, res, next){
+        const id = req.userData.id
+
+        try {
+            const data = await User.findByPk(id)
+
+            if(!data){
+                throw {name : 'notFound'}
+            }else{
+                res.status(200).json(data)
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
+
     // read by id
     static async readUserById(req, res, next){
         const {id} = req.params

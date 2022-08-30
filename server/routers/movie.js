@@ -6,7 +6,7 @@ router.use(authentication)
 router.get('/', ControllerMovie.readMovie)
 router.post('/add', authorizationAdmin, ControllerMovie.addMovie)
 router.get('/:id', ControllerMovie.readMovieById)
-router.put('/edit/:id', authorizationAdmin, ControllerMovie.editMovie)
-router.delete('/delete/:id', authorizationAdmin, ControllerMovie.deleteMovie)
+router.put('/:id', authorizationAdmin, ControllerMovie.editMovie)
+router.delete('/:id', authorizationAdmin, ControllerMovie.deleteMovie)
 
 module.exports = router
