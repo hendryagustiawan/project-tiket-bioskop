@@ -1,6 +1,7 @@
 const {User} = require('../models')
 const {checkPassword} = require('../helpers/bcrypt')
 const {encodeData} = require('../helpers/jwt')
+const {OAuth2Client} = require('google-auth-library');
 
 class ControllerUser{
     // read All User
@@ -99,6 +100,53 @@ class ControllerUser{
                 next(error)
             }
         }
+    }
+
+    // login with googel
+    static async googleLogin (req, res, next){
+        const {token} = req.body
+        const client = new OAuth2Client(process.env.CLIENT_ID)
+        let payload
+
+        client.verifyIdToken({
+            idToken: token,
+            audience: process.env.CLIENT_ID
+        })
+        .then(tiket => {
+            payload = tiket.getPayload() // berisi data yang ada di akun googel kita pas login
+            
+            // cek data user apakah ada di database
+            return User.findOne({
+                where: {email : payload.email}
+            })
+        })
+        .then(user => {
+            // jika tidak ada di database maka kita akan buatkan, kemudian buatkan access_token
+            if(!user){
+                return User.create({ // punya akun googel tapi tidak punya data di database maka secara default kita akan buatkan data di databse seperti data berikut
+                    username : payload.name,
+                    email : payload.email,
+                    password : 'qwerty',
+                    role : 'staff',
+                    phoneNumber : '62123456789' 
+                }, {hooks : false})
+            }else{
+                // jika user ditemukan/ada maka kita akan buatkan accsess_token
+                return user
+            }
+        })
+        .then(data => {
+            // buatkan access_token
+            const access_token = encodeData({
+                id : data.id,
+                email: data.email,
+                role : data.role
+            })
+            res.status(200).json({access_token})
+        })
+        .catch(function(error){
+            next(error)
+        })
     }
 
     // edit user
