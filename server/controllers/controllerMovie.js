@@ -58,7 +58,7 @@ class ControllerMovie{
             if(dataEdit[0] === 0){
                 throw {name : 'notFound'}
             }
-            res.status(200).json(dataEdit)
+            res.status(200).json(dataEdit[1][0])
         } catch (error) {
             next(error)
         }
