@@ -20,6 +20,11 @@ const errHandler = (err, req, res, next) => {
             
             errMessage = `Email is required`
             break;
+        case "password and email required":
+            statusCode = 400
+            
+            errMessage = `Email and Password is required`
+            break;
         case "passwordRequired":
             statusCode = 400
             

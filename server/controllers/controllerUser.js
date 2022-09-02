@@ -7,7 +7,9 @@ class ControllerUser{
     // read All User
     static async readAll(req, res, next){
         try {
-            const user = await User.findAll()
+            const user = await User.findAll({
+                attributes: { exclude: ['createdAt', 'updatedAt', 'password'] }
+            })
             if(user.length === 0){
                 throw {name : 'notFound'}
             }else{
@@ -23,7 +25,9 @@ class ControllerUser{
         const id = req.userData.id
 
         try {
-            const data = await User.findByPk(id)
+            const data = await User.findOne({
+                attributes: { exclude: ['createdAt', 'updatedAt', 'password'] }
+            }, {where : {id}})
 
             if(!data){
                 throw {name : 'notFound'}
@@ -40,7 +44,9 @@ class ControllerUser{
         const {id} = req.params
 
         try {
-            const data = await User.findByPk(id)
+            const data = await User.findOne({
+                attributes: { exclude: ['createdAt', 'updatedAt', 'password'] }
+            }, {where : {id}})
 
             if(!data){
                 throw {name : 'notFound'}
@@ -77,7 +83,9 @@ class ControllerUser{
         const {email, password} = req.body
         
         // cek inputan ada/tidak
-        if(!email){ // jika inputan kosong
+        if(!password && !email){
+            next({name : 'password and email required'})
+        }else if(!email){ // jika inputan kosong
             next({name : 'emailRequired'})
         }else if(!password){
             next({name : 'passwordRequired'})
@@ -159,7 +167,11 @@ class ControllerUser{
             if(dataEdit[0] === 0){
                 throw {name : 'notFound'}
             }
-            res.status(200).json(dataEdit)
+            res.status(200).json({
+               id : dataEdit[1][0].id,
+               email : dataEdit[1][0].email,
+               phoneNumber : dataEdit[1][0].phoneNumber
+            })
         } catch (error) {
             next(error)
         }

@@ -3,7 +3,7 @@ const ControllerUser = require('../controllers/controllerUser')
 const {authentication} = require('../middelware/auth')
 
 
-router.post('/add', ControllerUser.addUser)
+router.post('/register', ControllerUser.addUser)
 router.post('/login', ControllerUser.login)
 router.post('google-login', ControllerUser.googleLogin)
 router.use(authentication)
