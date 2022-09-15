@@ -122,7 +122,7 @@ class ControllerCustomer {
     const { id } = req.params;
 
     try {
-      const movie = await Movie.findOne({ wher: { id }, attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Production"] });
+      const movie = await Movie.findOne({ where: { id }, attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Production"] });
 
       if (!movie) next({ name: "notFound" });
 
