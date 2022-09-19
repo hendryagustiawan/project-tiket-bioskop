@@ -2,6 +2,7 @@ const { OAuth2Client } = require("google-auth-library");
 const { checkPassword } = require("../helpers/bcrypt");
 const { encodeData } = require("../helpers/jwt");
 const { User, Movie } = require("../models");
+const { Op } = require("sequelize");
 
 class ControllerCustomer {
   static async registerCustomer(req, res, next) {
@@ -109,10 +110,29 @@ class ControllerCustomer {
   }
 
   static async getMovie(req, res, next) {
+    let { title, page } = req.query;
     try {
-      const movies = await Movie.findAll({ attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Production"] });
+      // pagination
+      let option = { attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Production"] };
+      if (page) {
+        (option.limit = 4), (option.offset = option.limit * page - option.limit);
+      }
+      // filer by title
+      let conditional = {};
+      if (title) {
+        conditional.title = {
+          [Op.iLike]: `%${title}%`,
+        };
+      }
 
-      res.status(200).json(movies);
+      option.where = conditional;
+      const { count, rows } = await Movie.findAndCountAll(option);
+
+      res.status(200).json({
+        totalData: count,
+        totalPage: Math.ceil(count / 8),
+        rows,
+      });
     } catch (error) {
       next(error);
     }
