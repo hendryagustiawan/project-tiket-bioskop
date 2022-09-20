@@ -9,5 +9,7 @@ router.get("/movie", ControllerCustomer.getMovie);
 router.get("/movie/:id", ControllerCustomer.getMovieId);
 router.use(authentication);
 router.get("/one-customer", ControllerCustomer.getOneCustomer);
+router.post("/booking/:id", ControllerCustomer.addBooking);
+router.get("/booking", ControllerCustomer.getBooking);
 
 module.exports = router;

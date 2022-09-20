@@ -1,7 +1,7 @@
 const { OAuth2Client } = require("google-auth-library");
 const { checkPassword } = require("../helpers/bcrypt");
 const { encodeData } = require("../helpers/jwt");
-const { User, Movie } = require("../models");
+const { User, Movie, Booking } = require("../models");
 const { Op } = require("sequelize");
 
 class ControllerCustomer {
@@ -117,7 +117,7 @@ class ControllerCustomer {
       if (page) {
         (option.limit = 4), (option.offset = option.limit * page - option.limit);
       }
-      // filer by title
+      // filter by title
       let conditional = {};
       if (title) {
         conditional.title = {
@@ -130,7 +130,7 @@ class ControllerCustomer {
 
       res.status(200).json({
         totalData: count,
-        totalPage: Math.ceil(count / 8),
+        totalPage: Math.ceil(count / 4),
         rows,
       });
     } catch (error) {
@@ -147,6 +147,44 @@ class ControllerCustomer {
       if (!movie) next({ name: "notFound" });
 
       res.status(200).json(movie);
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async addBooking(req, res, next) {
+    const { id } = req.params;
+    const UserId = req.userData.id;
+
+    try {
+      let movie = await Movie.findOne({
+        where: { id },
+      });
+
+      if (!movie) {
+        next({ name: "notFound" });
+      } else {
+        const dataBooking = await Booking.create({ MovieId: id, UserId });
+
+        res.status(200).json({
+          id: dataBooking.id,
+          UserId: dataBooking.UserId,
+          MovieId: dataBooking.MovieId,
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async getBooking(req, res, next) {
+    const UserId = req.userData.id;
+
+    try {
+      let booking = await Booking.findAll({
+        where: { UserId },
+        include: ["Movie"],
+      });
+
+      res.status(200).json(booking);
     } catch (error) {
       next(error);
     }
