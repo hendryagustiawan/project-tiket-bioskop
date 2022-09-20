@@ -3,8 +3,35 @@ const { checkPassword } = require("../helpers/bcrypt");
 const { encodeData } = require("../helpers/jwt");
 const { User, Movie, Booking } = require("../models");
 const { Op } = require("sequelize");
+const midtransClient = require("midtrans-client");
 
 class ControllerCustomer {
+  // pembayaran dengan midtrans
+  static async payment(req, res, next) {
+    // Create Snap API instance
+    let snap = new midtransClient.Snap({
+      isProduction: false,
+      serverKey: "Mid-server-t6M3TOc_TTc2NowQKhtT26Pu",
+      clientKey: "Mid-client-xYqMffqILos4iUVF",
+    });
+
+    let parameter = {
+      transaction_details: {
+        order_id: "test-transaction-123",
+        gross_amount: 200000,
+      },
+      credit_card: {
+        secure: true,
+      },
+    };
+
+    snap.createTransaction(parameter).then((transaction) => {
+      // transaction token
+      let transactionToken = transaction.token;
+      console.log("transactionToken:", transactionToken);
+    });
+  }
+
   static async registerCustomer(req, res, next) {
     const { username, password, email, phoneNumber } = req.body;
 

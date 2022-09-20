@@ -61,6 +61,21 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      linkYT: {
+        type: DataTypes.STRING,
+        allowNull: false,
+
+        validate: {
+          notNull: {
+            args: true,
+            msg: `Link Youtube be Null`,
+          },
+          notEmpty: {
+            args: true,
+            msg: `Link Youtube be Empty`,
+          },
+        },
+      },
       producer: {
         type: DataTypes.STRING,
         allowNull: false,
