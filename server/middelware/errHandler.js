@@ -44,7 +44,7 @@ const errHandler = (err, req, res, next) => {
       break;
     case "Can't Add":
       statusCode = 401;
-      errMessage = "Movie is Already";
+      errMessage = "Movie is Already to Booking";
       break;
     case "notFound":
       statusCode = 404;

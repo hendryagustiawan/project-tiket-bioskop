@@ -8,28 +8,35 @@ const midtransClient = require("midtrans-client");
 class ControllerCustomer {
   // pembayaran dengan midtrans
   static async payment(req, res, next) {
+    let { price } = req.body;
+
     // Create Snap API instance
     let snap = new midtransClient.Snap({
       isProduction: false,
-      serverKey: "Mid-server-t6M3TOc_TTc2NowQKhtT26Pu",
-      clientKey: "Mid-client-xYqMffqILos4iUVF",
+      serverKey: "SB-Mid-server-KK51sjJAFU9FAsAg8zubYAYY",
+      clientKey: "SB-Mid-client-qDAceonncjC0fhKG",
     });
+
+    // for get orderId unique
+    const randomUnique = Math.random().toString(36).substring(2, 7);
 
     let parameter = {
       transaction_details: {
-        order_id: "test-transaction-123",
-        gross_amount: 200000,
-      },
-      credit_card: {
-        secure: true,
+        order_id: randomUnique,
+        gross_amount: price,
       },
     };
 
-    snap.createTransaction(parameter).then((transaction) => {
-      // transaction token
-      let transactionToken = transaction.token;
-      console.log("transactionToken:", transactionToken);
-    });
+    snap
+      .createTransaction(parameter)
+      .then((transaction) => {
+        // transaction token
+        let transactionToken = transaction.token;
+        res.status(201).json({ token: transactionToken });
+      })
+      .catch((error) => {
+        next(error);
+      });
   }
 
   static async registerCustomer(req, res, next) {
@@ -79,7 +86,7 @@ class ControllerCustomer {
   }
 
   static async loginGoogle(req, res, next) {
-    const token = req.body;
+    const { token } = req.body;
     const client = new OAuth2Client(process.env.CLIENT_ID);
     let payload;
 
@@ -95,20 +102,20 @@ class ControllerCustomer {
           where: { email: payload.email },
         });
       })
-      .then((customer) => {
-        if (!customer) {
+      .then((user) => {
+        if (!user) {
           return User.create(
             {
               username: payload.name,
               email: payload.email,
               password: "qwerty",
               role: "customer",
-              phoneNumber: "62576899879",
+              phoneNumber: "62123456789",
             },
             { hooks: false }
           );
         } else {
-          return customer;
+          return user;
         }
       })
       .then((data) => {
@@ -119,7 +126,7 @@ class ControllerCustomer {
         });
         res.status(200).json({ access_token });
       })
-      .catch((error) => {
+      .catch(function (error) {
         next(error);
       });
   }
@@ -142,7 +149,9 @@ class ControllerCustomer {
       // pagination
       let option = { attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Production"] };
       if (page) {
-        (option.limit = 4), (option.offset = option.limit * page - option.limit);
+        (option.limit = 4),
+          // jumlah yang mau di skip
+          (option.offset = page);
       }
       // filter by title
       let conditional = {};
@@ -178,6 +187,7 @@ class ControllerCustomer {
       next(error);
     }
   }
+
   static async addBooking(req, res, next) {
     const { id } = req.params;
     const UserId = req.userData.id;
@@ -190,6 +200,10 @@ class ControllerCustomer {
       if (!movie) {
         next({ name: "notFound" });
       } else {
+        const mybooking = await Booking.findOne({ where: { MovieId: id, UserId } });
+
+        if (mybooking) throw { name: `Can't Add` };
+
         const dataBooking = await Booking.create({ MovieId: id, UserId });
 
         res.status(200).json({
@@ -202,6 +216,21 @@ class ControllerCustomer {
       next(error);
     }
   }
+  static async getBookingId(req, res, next) {
+    const { id } = req.params;
+    const UserId = req.userData.id;
+
+    try {
+      const booking = await Booking.findOne({ where: { MovieId: id, UserId }, attributes: { exclude: ["createdAt", "updatedAt"] }, include: ["Movie"] });
+
+      if (!booking) throw { name: "notFound" };
+
+      res.status(200).json(booking);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getBooking(req, res, next) {
     const UserId = req.userData.id;
 
@@ -212,6 +241,22 @@ class ControllerCustomer {
       });
 
       res.status(200).json(booking);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteMyBooking(req, res, next) {
+    const { id } = req.params;
+
+    try {
+      const data = await Booking.destroy({ where: { id } });
+
+      if (!data) {
+        throw { name: "notFound" };
+      } else {
+        res.status(200).json({ message: "Success to delete ticket" });
+      }
     } catch (error) {
       next(error);
     }

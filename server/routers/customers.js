@@ -11,6 +11,8 @@ router.post("/payment", ControllerCustomer.payment);
 router.use(authentication);
 router.get("/one-customer", ControllerCustomer.getOneCustomer);
 router.post("/booking/:id", ControllerCustomer.addBooking);
+router.get("/booking/:id", ControllerCustomer.getBookingId);
 router.get("/booking", ControllerCustomer.getBooking);
+router.delete("/booking/:id", ControllerCustomer.deleteMyBooking);
 
 module.exports = router;
